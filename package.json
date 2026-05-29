@@ -1,0 +1,24 @@
+{
+  "name": "etf-portfolio-tracker",
+  "version": "1.0.0",
+  "description": "ETF Portfolio Tracker - 投資組合追蹤工具",
+  "main": "index.html",
+  "scripts": {
+    "start": "open index.html",
+    "deploy": "./deploy.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonckfan/portfolio-tracker.git"
+  },
+  "keywords": [
+    "etf",
+    "portfolio",
+    "investment",
+    "tracker",
+    "finance"
+  ],
+  "author": "Jason Fan",
+  "license": "MIT",
+  "homepage": "https://jasonfan.github.io/portfolio-tracker"
+}

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF投資組合追蹤 | Portfolio Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">📈</span>
+                <h1>ETF投資組合追蹤</h1>
+            </div>
+            <div class="last-updated">
+                最後更新: <span id="lastUpdated">--</span>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <section class="summary-cards">
+            <div class="card primary">
+                <div class="card-label">投資組合現值</div>
+                <div class="card-value" id="portfolioValue">--</div>
+                <div class="card-subtitle">USD</div>
+            </div>
+            <div class="card">
+                <div class="card-label">總投入本金</div>
+                <div class="card-value" id="totalInvested">--</div>
+                <div class="card-subtitle">USD</div>
+            </div>
+            <div class="card" id="profitCard">
+                <div class="card-label">總利潤/虧損</div>
+                <div class="card-value" id="totalProfit">--</div>
+                <div class="card-change" id="profitChange">--</div>
+            </div>
+            <div class="card">
+                <div class="card-label">總回報率</div>
+                <div class="card-value" id="totalReturn">--</div>
+                <div class="card-change" id="returnChange">--</div>
+            </div>
+            <div class="card">
+                <div class="card-label">年化回報率</div>
+                <div class="card-value" id="annualReturn">--</div>
+                <div class="card-subtitle">XIRR</div>
+            </div>
+            <div class="card">
+                <div class="card-label">當前期數</div>
+                <div class="card-value" id="currentPeriod">--</div>
+                <div class="card-subtitle">/ 120期</div>
+            </div>
+        </section>
+
+        <!-- Next Investment Alert -->
+        <section class="alert-box" id="nextInvestmentAlert">
+            <div class="alert-icon">🗓️</div>
+            <div class="alert-content">
+                <h3>下次月供提醒</h3>
+                <p id="nextInvestmentText">計算中...</p>
+            </div>
+            <button class="btn btn-primary" onclick="markInvestmentDone()">標記為已完成</button>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="chart-container">
+                <h2>投資組合價值走勢</h2>
+                <canvas id="portfolioChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>各ETF配置比例</h2>
+                <canvas id="allocationChart"></canvas>
+            </div>
+        </section>
+
+        <!-- ETF Details Table -->
+        <section class="etf-details">
+            <h2>各ETF詳細數據</h2>
+            <div class="table-container">
+                <table id="etfTable">
+                    <thead>
+                        <tr>
+                            <th>ETF代碼</th>
+                            <th>名稱</th>
+                            <th>配置</th>
+                            <th>每月投入(USD)</th>
+                            <th>累計投入(USD)</th>
+                            <th>持有股數</th>
+                            <th>現價(USD)</th>
+                            <th>現值(USD)</th>
+                            <th>損益(USD)</th>
+                            <th>回報率</th>
+                        </tr>
+                    </thead>
+                    <tbody id="etfTableBody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Monthly Investment Log -->
+        <section class="investment-log">
+            <h2>月供記錄</h2>
+            <div class="log-filters">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="year">按年</button>
+                <button class="filter-btn" data-filter="month">按月</button>
+            </div>
+            <div class="table-container">
+                <table id="logTable">
+                    <thead>
+                        <tr>
+                            <th>期數</th>
+                            <th>日期</th>
+                            <th>ETF</th>
+                            <th>投入(USD)</th>
+                            <th>買入價(USD)</th>
+                            <th>買入股數</th>
+                            <th>現價(USD)</th>
+                            <th>現值(USD)</n                            <th>回報率</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Rebalance Alert -->
+        <section class="alert-box warning" id="rebalanceAlert" style="display: none;">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <h3>半年度組合檢視提醒</h3>
+                <p id="rebalanceText">您的投資組合需要檢視是否需要調整配置。</p>
+            </div>
+            <button class="btn btn-secondary" onclick="checkRebalance()">檢視分析</button>
+        </section>
+
+        <!-- Rebalance Analysis Modal -->
+        <div class="modal" id="rebalanceModal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>組合配置分析</h2>
+                <div id="rebalanceAnalysis">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Investment Confirmation Modal -->
+        <div class="modal" id="investmentModal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeInvestmentModal()">&times;</span>
+                <h2>✅ 月供完成確認</h2>
+                <div id="investmentDetails">
+                    <!-- Dynamic content -->
+                </div>
+                <button class="btn btn-primary" onclick="confirmInvestment()">確認並記錄</button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <section class="settings">
+            <h2>⚙️ 設定</h2>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label>每月投入金額 (港幣)</label>
+                    <input type="number" id="monthlyAmount" value="8000" onchange="updateSettings()">
+                </div>
+                <div class="setting-item">
+                    <label>美元匯率 (HKD/USD)</label>
+                    <input type="number" id="exchangeRate" value="7.8" step="0.01" onchange="updateSettings()">
+                </div>
+                <div class="setting-item">
+                    <label>開始日期</label>
+                    <input type="date" id="startDate" value="2025-06-01" onchange="updateSettings()">
+                </div>
+                <div class="setting-item">
+                    <label>目標年化回報率 (%)</label>
+                    <input type="number" id="targetReturn" value="12" step="0.5" onchange="updateSettings()">
+                </div>
+            </div>
+            <div class="allocation-editor">
+                <h3>配置比例調整</h3>
+                <div class="allocation-sliders" id="allocationSliders">
+                    <!-- Dynamic sliders -->
+                </div>
+                <div class="allocation-total" id="allocationTotal">總計: 100%</div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>⚠️ 免責聲明：本工具僅供參考，不構成投資建議。投資涉及風險，過往表現不代表未來回報。</p>
+            <p>數據來源：Yahoo Finance | 最後更新時間: <span id="footerUpdated">--</span></p>
+        </footer>
+    </div>
+
+    <script src="portfolio.js"></script>
+</body>
+</html>
