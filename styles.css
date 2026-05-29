@@ -386,25 +386,109 @@ tr:hover {
 }
 
 .allocation-sliders {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.slider-item {
     display: flex;
     flex-direction: column;
+    gap: 16px;
+}
+
+.allocation-item {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+
+.allocation-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.allocation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.allocation-info {
+    flex: 1;
+}
+
+.allocation-code {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.allocation-name {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.allocation-inputs {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
 }
 
-.slider-header {
+.input-group {
     display: flex;
-    justify-content: space-between;
-    font-size: 14px;
+    align-items: center;
+    gap: 8px;
 }
 
-.slider-item input[type="range"] {
-    width: 100%;
+.input-group input[type="number"] {
+    width: 70px;
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.input-group input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.input-suffix {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.allocation-amount {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.allocation-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.allocation-progress {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.allocation-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 13px;
 }
 
 .allocation-total {
@@ -414,11 +498,28 @@ tr:hover {
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.allocation-total.success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.allocation-total.warning {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .allocation-total.error {
     background: #fee2e2;
-    color: var(--danger);
+    color: #991b1b;
+}
+
+/* Legacy slider styles - can be removed if not used elsewhere */
+.slider-item {
+    display: none;
 }
 
 /* Footer */

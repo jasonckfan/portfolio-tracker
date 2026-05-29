@@ -665,44 +665,152 @@ function updateSettings() {
     updateUI();
 }
 
-// Update allocation sliders
+// Update allocation sliders - Improved version with number inputs
 function updateAllocationSliders() {
     const container = document.getElementById('allocationSliders');
-    if (!container || container.children.length > 0) return;
+    if (!container) return;
+    
+    // Clear existing content
+    container.innerHTML = '';
+    
+    const monthlyUSD = PORTFOLIO_CONFIG.monthlyAmountHKD / PORTFOLIO_CONFIG.exchangeRate;
     
     for (const [symbol, config] of Object.entries(PORTFOLIO_CONFIG.etfs)) {
         const div = document.createElement('div');
-        div.className = 'slider-item';
+        div.className = 'allocation-item';
         div.innerHTML = `
-            <div class="slider-header">
-                <span><strong>${symbol}</strong> - ${config.name}</span>
-                <span id="${symbol}-value">${(config.allocation * 100).toFixed(0)}%</span>
+            <div class="allocation-row">
+                <div class="allocation-info">
+                    <div class="allocation-code">${symbol}</div>
+                    <div class="allocation-name">${config.name}</div>
+                </div>
+                <div class="allocation-inputs">
+                    <div class="input-group">
+                        <input type="number" 
+                               id="${symbol}-percent" 
+                               value="${(config.allocation * 100).toFixed(0)}" 
+                               min="0" 
+                               max="100"
+                               step="1"
+                               oninput="updateAllocationFromInput('${symbol}', this.value)">
+                        <span class="input-suffix">%</span>
+                    </div>
+                    <div class="allocation-amount">
+                        ≈ $${(monthlyUSD * config.allocation).toFixed(0)} USD
+                    </div>
+                </div>
             </div>
-            <input type="range" min="0" max="100" value="${(config.allocation * 100).toFixed(0)}" 
-                   onchange="updateAllocation('${symbol}', this.value)">
+            <div class="allocation-bar">
+                <div class="allocation-progress" style="width: ${config.allocation * 100}%; background: ${getETFColor(symbol)}"></div>
+            </div>
         `;
         container.appendChild(div);
     }
+    
+    // Add quick action buttons
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'allocation-actions';
+    buttonsDiv.innerHTML = `
+        <button class="btn btn-secondary btn-small" onclick="resetAllocations()">重置為方案3</button>
+        <button class="btn btn-secondary btn-small" onclick="equalAllocations()">平均分配</button>
+    `;
+    container.appendChild(buttonsDiv);
+    
+    updateAllocationTotal();
 }
 
-// Update allocation
-function updateAllocation(symbol, value) {
-    const newAllocation = parseInt(value) / 100;
-    PORTFOLIO_CONFIG.etfs[symbol].allocation = newAllocation;
-    document.getElementById(`${symbol}-value`).textContent = `${value}%`;
+// Update allocation from number input
+function updateAllocationFromInput(symbol, value) {
+    const numValue = parseInt(value) || 0;
+    const newAllocation = Math.max(0, Math.min(100, numValue)) / 100;
     
-    // Check total
+    PORTFOLIO_CONFIG.etfs[symbol].allocation = newAllocation;
+    
+    // Update the progress bar
+    const progressBar = document.querySelector(`#${symbol}-percent`).closest('.allocation-item').querySelector('.allocation-progress');
+    if (progressBar) {
+        progressBar.style.width = `${newAllocation * 100}%`;
+    }
+    
+    // Update the amount display
+    const monthlyUSD = PORTFOLIO_CONFIG.monthlyAmountHKD / PORTFOLIO_CONFIG.exchangeRate;
+    const amountEl = document.querySelector(`#${symbol}-percent`).closest('.allocation-inputs').querySelector('.allocation-amount');
+    if (amountEl) {
+        amountEl.textContent = `≈ $${(monthlyUSD * newAllocation).toFixed(0)} USD`;
+    }
+    
+    updateAllocationTotal();
+    saveSettings();
+    
+    // Debounced UI update
+    clearTimeout(window.allocationUpdateTimeout);
+    window.allocationUpdateTimeout = setTimeout(() => updateUI(), 500);
+}
+
+// Update allocation total display
+function updateAllocationTotal() {
     let total = 0;
     for (const config of Object.values(PORTFOLIO_CONFIG.etfs)) {
         total += config.allocation;
     }
     
     const totalEl = document.getElementById('allocationTotal');
-    totalEl.textContent = `總計: ${(total * 100).toFixed(0)}%`;
-    totalEl.className = 'allocation-total' + (Math.abs(total - 1) > 0.01 ? ' error' : '');
+    const totalPercent = (total * 100).toFixed(0);
     
+    if (totalEl) {
+        if (Math.abs(total - 1) <= 0.01) {
+            totalEl.innerHTML = `✅ 總計: ${totalPercent}%`;
+            totalEl.className = 'allocation-total success';
+        } else if (total > 1) {
+            totalEl.innerHTML = `⚠️ 總計: ${totalPercent}% (超出 ${(totalPercent - 100)}%)`;
+            totalEl.className = 'allocation-total error';
+        } else {
+            totalEl.innerHTML = `⚠️ 總計: ${totalPercent}% (還差 ${(100 - totalPercent)}%)`;
+            totalEl.className = 'allocation-total warning';
+        }
+    }
+}
+
+// Get color for each ETF
+function getETFColor(symbol) {
+    const colors = {
+        VOO: '#2563eb',
+        QQQ: '#10b981',
+        SPMO: '#f59e0b',
+        XLK: '#ef4444',
+        SMH: '#8b5cf6'
+    };
+    return colors[symbol] || '#64748b';
+}
+
+// Reset to Scheme 3
+function resetAllocations() {
+    PORTFOLIO_CONFIG.etfs.VOO.allocation = 0.30;
+    PORTFOLIO_CONFIG.etfs.QQQ.allocation = 0.25;
+    PORTFOLIO_CONFIG.etfs.SPMO.allocation = 0.20;
+    PORTFOLIO_CONFIG.etfs.XLK.allocation = 0.15;
+    PORTFOLIO_CONFIG.etfs.SMH.allocation = 0.10;
+    
+    updateAllocationSliders();
     saveSettings();
     updateUI();
+}
+
+// Equal allocation
+function equalAllocations() {
+    const equal = 0.20; // 20% each
+    for (const symbol of Object.keys(PORTFOLIO_CONFIG.etfs)) {
+        PORTFOLIO_CONFIG.etfs[symbol].allocation = equal;
+    }
+    
+    updateAllocationSliders();
+    saveSettings();
+    updateUI();
+}
+
+// Legacy function - keep for compatibility
+function updateAllocation(symbol, value) {
+    updateAllocationFromInput(symbol, value);
 }
 
 // Setup event listeners
